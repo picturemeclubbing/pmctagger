@@ -10,6 +10,8 @@ import useDebug from '../debug/useDebug';
 import { getSession, deleteSession } from '../services/SessionStore';
 import { blobToDataURL } from '../utils/helpers';
 import SessionMeta from '../components/session/SessionMeta';
+import { createAndSendEmail, createAndSendSMS, listDeliveries } from '../services/DeliverySimple';
+import { listCustomers } from '../services/CustomerStore';
 
 function SessionDetailPage() {
   const { sessionId } = useParams();
@@ -20,6 +22,10 @@ function SessionDetailPage() {
   const [imageUrl, setImageUrl] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deliveries, setDeliveries] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [customerMap, setCustomerMap] = useState(new Map());
+  const [deliveryFeedback, setDeliveryFeedback] = useState('');
 
   useEffect(() => {
     loadSession();
@@ -100,6 +106,72 @@ function SessionDetailPage() {
     } catch (error) {
       debug.error('delete_failed', { sessionId, error: error.message });
       setIsDeleting(false);
+    }
+  };
+
+  // PHASE 6.2f: Load deliveries and customers for session delivery functionality
+  useEffect(() => {
+    loadDeliveriesAndCustomers();
+  }, [sessionId]);
+
+  const loadDeliveriesAndCustomers = async () => {
+    try {
+      // Load deliveries for this session using optimized anyOf query
+      const sessionDeliveries = await listDeliveries({ sessionIds: [sessionId] });
+      setDeliveries(sessionDeliveries);
+
+      // Load customers for delivery creation
+      const customersData = await listCustomers();
+      setCustomers(customersData);
+
+      // Create efficient customer lookup map
+      const map = new Map();
+      customersData.forEach(customer => {
+        map.set(customer.id, customer);
+      });
+      setCustomerMap(map);
+
+      debug.log('deliveries_and_customers_loaded', {
+        sessionId,
+        deliveries: sessionDeliveries.length,
+        customers: customersData.length
+      });
+    } catch (error) {
+      debug.error('load_deliveries_customers_failed', error.message);
+    }
+  };
+
+  const handleCreateAndSendEmail = async (customerId) => {
+    try {
+      const customer = customerMap.get(customerId);
+      if (!customer) throw new Error('Customer not found');
+
+      const result = await createAndSendEmail(sessionId, customerId);
+      setDeliveryFeedback('⚡ Atomic Email Sent!');
+      await loadDeliveriesAndCustomers(); // Refresh deliveries
+
+      setTimeout(() => setDeliveryFeedback(''), 3000);
+    } catch (error) {
+      debug.error('create_and_send_email_failed', error.message);
+      setDeliveryFeedback(`❌ Error: ${error.message}`);
+      setTimeout(() => setDeliveryFeedback(''), 3000);
+    }
+  };
+
+  const handleCreateAndSendSMS = async (customerId) => {
+    try {
+      const customer = customerMap.get(customerId);
+      if (!customer) throw new Error('Customer not found');
+
+      const result = await createAndSendSMS(sessionId, customerId);
+      setDeliveryFeedback('⚡ Atomic SMS Sent!');
+      await loadDeliveriesAndCustomers(); // Refresh deliveries
+
+      setTimeout(() => setDeliveryFeedback(''), 3000);
+    } catch (error) {
+      debug.error('create_and_send_sms_failed', error.message);
+      setDeliveryFeedback(`❌ Error: ${error.message}`);
+      setTimeout(() => setDeliveryFeedback(''), 3000);
     }
   };
 
@@ -283,6 +355,111 @@ function SessionDetailPage() {
                   <span>{isDeleting ? 'Deleting...' : 'Delete Session'}</span>
                 </button>
               </div>
+            </div>
+
+            {/* PHASE 6.2f: Session Deliveries */}
+            <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
+              <h2 className="text-lg font-semibold text-white mb-4">
+                🚀 Session Deliveries ({deliveries.length})
+              </h2>
+
+              {/* Delivery Feedback */}
+              {deliveryFeedback && (
+                <div className={`text-sm mb-4 ${deliveryFeedback.startsWith('⚡') ? 'text-blue-400' : 'text-red-400'}`}>
+                  {deliveryFeedback}
+                </div>
+              )}
+
+              {/* Create Delivery Section */}
+              {customers.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-md font-medium text-white mb-3">Create Atomic Delivery</h3>
+                  <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto">
+                    {customers.map(customer => (
+                      <div key={customer.id} className="flex items-center justify-between bg-gray-700 rounded p-3">
+                        <div className="flex-1">
+                          <div className="font-medium text-white">{customer.name}</div>
+                          <div className="text-sm text-gray-300">@{customer.handle}</div>
+                          <div className="text-xs text-gray-400">
+                            {customer.email && `📧 ${customer.email}`}
+                            {customer.email && customer.phone && ' • '}
+                            {customer.phone && `📱 ${customer.phone}`}
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleCreateAndSendEmail(customer.id)}
+                            disabled={!customer.email}
+                            title={!customer.email ? 'No email address' : 'Send atomic email'}
+                            className={`px-3 py-1 rounded text-xs font-medium ${
+                              customer.email
+                                ? 'bg-green-600 hover:bg-green-700 text-white'
+                                : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                            }`}
+                          >
+                            ⚡ Email
+                          </button>
+                          <button
+                            onClick={() => handleCreateAndSendSMS(customer.id)}
+                            disabled={!customer.phone}
+                            title={!customer.phone ? 'No phone number' : 'Send atomic SMS'}
+                            className={`px-3 py-1 rounded text-xs font-medium ${
+                              customer.phone
+                                ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                                : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                            }`}
+                          >
+                            ⚡ SMS
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Deliveries List */}
+              {deliveries.length > 0 && (
+                <div>
+                  <h3 className="text-md font-medium text-white mb-3">Recent Deliveries</h3>
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {deliveries.slice(-5).reverse().map(delivery => {
+                      const customer = customerMap.get(delivery.customerId);
+                      return (
+                        <div key={delivery.id} className="flex items-center justify-between bg-gray-700 rounded p-3">
+                          <div className="flex-1">
+                            <div className="text-sm font-medium text-white">
+                              {customer?.name || 'Unknown'} (@{customer?.handle || 'unknown'})
+                            </div>
+                            <div className="text-xs text-gray-400">
+                              {new Date(delivery.createdAt).toLocaleString()}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className={`px-2 py-1 rounded text-xs ${
+                              delivery.method === 'email' ? 'bg-blue-600' : 'bg-purple-600'
+                            } text-white`}>
+                              {delivery.method}
+                            </span>
+                            <span className={`px-2 py-1 rounded text-xs ${
+                              delivery.status === 'sent' ? 'bg-green-600' : 'bg-yellow-600'
+                            } text-white`}>
+                              {delivery.status}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {customers.length === 0 && (
+                <div className="text-center py-4 text-gray-400">
+                  <div className="text-2xl mb-2">👥</div>
+                  <div className="text-sm">No customers found. Add customers first.</div>
+                </div>
+              )}
             </div>
 
             {/* Quick Links */}
