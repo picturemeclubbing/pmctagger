@@ -142,6 +142,12 @@ function SessionDetailPage() {
   };
 
   const handleCreateAndSendEmail = async (customerId) => {
+    if (!customerId) {
+      // Navigate to customer selection page
+      navigate('/customers');
+      return;
+    }
+
     try {
       const customer = customerMap.get(customerId);
       if (!customer) throw new Error('Customer not found');
@@ -158,7 +164,25 @@ function SessionDetailPage() {
     }
   };
 
+  const handleSendEmail = async () => {
+    // For now, navigate to customer selection or delivery page
+    debug.log('navigate_to_send_email', { sessionId });
+    navigate(`/deliveries/send-email/${sessionId}`);
+  };
+
+  const handleSendSMS = async () => {
+    // For now, navigate to customer selection or delivery page
+    debug.log('navigate_to_send_sms', { sessionId });
+    navigate(`/deliveries/send-sms/${sessionId}`);
+  };
+
   const handleCreateAndSendSMS = async (customerId) => {
+    if (!customerId) {
+      // Navigate to customer selection page
+      navigate('/customers');
+      return;
+    }
+
     try {
       const customer = customerMap.get(customerId);
       if (!customer) throw new Error('Customer not found');
@@ -242,9 +266,9 @@ function SessionDetailPage() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-7xl mx-auto px-4 py-8 w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left Column: Image Preview */}
+      <main className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
+        <div className="space-y-6">
+          {/* Image Preview Card */}
           <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
             <h2 className="text-lg font-semibold text-white mb-4">
               Image Preview
@@ -288,206 +312,112 @@ function SessionDetailPage() {
             </div>
           </div>
 
-          {/* Right Column: Session Details & Actions */}
-          <div className="space-y-6">
-            {/* Session Metadata */}
-            <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
-              <h2 className="text-lg font-semibold text-white mb-4">
-                Session Information
-              </h2>
-              <SessionMeta session={session} />
+          {/* Actions Card */}
+          <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
+            <h2 className="text-lg font-semibold text-white mb-4">
+              Actions
+            </h2>
+
+            <div className="space-y-3">
+              {/* Send SMS */}
+              <button
+                onClick={() => handleCreateAndSendSMS(customerMap.values().next().value?.id || null)}
+                className="
+                  w-full px-6 py-4
+                  bg-green-600 hover:bg-green-700
+                  text-white font-semibold rounded-lg
+                  transition-all duration-200
+                  flex items-center justify-center gap-3
+                  shadow-md hover:shadow-lg
+                "
+              >
+                <span className="text-2xl">📱</span>
+                <span>Send SMS</span>
+              </button>
+
+              {/* Send Email */}
+              <button
+                onClick={() => handleCreateAndSendEmail(customerMap.values().next().value?.id || null)}
+                className="
+                  w-full px-6 py-4
+                  bg-blue-600 hover:bg-blue-700
+                  text-white font-semibold rounded-lg
+                  transition-all duration-200
+                  flex items-center justify-center gap-3
+                  shadow-md hover:shadow-lg
+                "
+              >
+                <span className="text-2xl">✉️</span>
+                <span>Send Email</span>
+              </button>
+
+              {/* Share Session */}
+              <button
+                onClick={handleShare}
+                className="
+                  w-full px-6 py-4
+                  bg-gray-700 hover:bg-gray-800
+                  text-white font-semibold rounded-lg
+                  transition-all duration-200
+                  flex items-center justify-center gap-3
+                  shadow-md hover:shadow-lg
+                "
+              >
+                <span className="text-2xl">🔗</span>
+                <span>Share Session</span>
+              </button>
+
+              {/* Tag Again */}
+              <button
+                onClick={handleTagAgain}
+                className="
+                  w-full px-6 py-4
+                  bg-yellow-600 hover:bg-yellow-700
+                  text-white font-semibold rounded-lg
+                  transition-all duration-200
+                  flex items-center justify-center gap-3
+                  shadow-md hover:shadow-lg
+                "
+              >
+                <span className="text-2xl">🏷️</span>
+                <span>Tag Again</span>
+              </button>
             </div>
+          </div>
 
-            {/* Action Buttons */}
-            <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
-              <h2 className="text-lg font-semibold text-white mb-4">
-                Actions
-              </h2>
+          {/* Session Information Card */}
+          <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
+            <h2 className="text-lg font-semibold text-white mb-4">
+              Session Information
+            </h2>
+            <SessionMeta session={session} />
+          </div>
 
-              <div className="space-y-3">
-                {/* Tag Again */}
-                <button
-                  onClick={handleTagAgain}
-                  className="
-                    w-full px-6 py-4
-                    bg-blue-600 hover:bg-blue-700
-                    text-white font-semibold rounded-lg
-                    transition-all duration-200
-                    flex items-center justify-center gap-3
-                    shadow-md hover:shadow-lg
-                  "
-                >
-                  <span className="text-2xl">🏷️</span>
-                  <span>Tag Again</span>
-                </button>
+          {/* Quick Links */}
+          <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
+            <h2 className="text-lg font-semibold text-white mb-4">
+              Quick Links
+            </h2>
 
-                {/* Share */}
-                <button
-                  onClick={handleShare}
-                  className="
-                    w-full px-6 py-4
-                    bg-green-600 hover:bg-green-700
-                    text-white font-semibold rounded-lg
-                    transition-all duration-200
-                    flex items-center justify-center gap-3
-                    shadow-md hover:shadow-lg
-                  "
-                >
-                  <span className="text-2xl">📤</span>
-                  <span>Share Session</span>
-                </button>
-
-                {/* Delete */}
-                <button
-                  onClick={handleDelete}
-                  disabled={isDeleting}
-                  className="
-                    w-full px-6 py-4
-                    bg-red-600 hover:bg-red-700
-                    text-white font-semibold rounded-lg
-                    transition-all duration-200
-                    flex items-center justify-center gap-3
-                    shadow-md hover:shadow-lg
-                    disabled:opacity-50 disabled:cursor-not-allowed
-                  "
-                >
-                  <span className="text-2xl">🗑️</span>
-                  <span>{isDeleting ? 'Deleting...' : 'Delete Session'}</span>
-                </button>
-              </div>
-            </div>
-
-            {/* PHASE 6.2f: Session Deliveries */}
-            <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
-              <h2 className="text-lg font-semibold text-white mb-4">
-                🚀 Session Deliveries ({deliveries.length})
-              </h2>
-
-              {/* Delivery Feedback */}
-              {deliveryFeedback && (
-                <div className={`text-sm mb-4 ${deliveryFeedback.startsWith('⚡') ? 'text-blue-400' : 'text-red-400'}`}>
-                  {deliveryFeedback}
-                </div>
-              )}
-
-              {/* Create Delivery Section */}
-              {customers.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-md font-medium text-white mb-3">Create Atomic Delivery</h3>
-                  <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto">
-                    {customers.map(customer => (
-                      <div key={customer.id} className="flex items-center justify-between bg-gray-700 rounded p-3">
-                        <div className="flex-1">
-                          <div className="font-medium text-white">{customer.name}</div>
-                          <div className="text-sm text-gray-300">@{customer.handle}</div>
-                          <div className="text-xs text-gray-400">
-                            {customer.email && `📧 ${customer.email}`}
-                            {customer.email && customer.phone && ' • '}
-                            {customer.phone && `📱 ${customer.phone}`}
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleCreateAndSendEmail(customer.id)}
-                            disabled={!customer.email}
-                            title={!customer.email ? 'No email address' : 'Send atomic email'}
-                            className={`px-3 py-1 rounded text-xs font-medium ${
-                              customer.email
-                                ? 'bg-green-600 hover:bg-green-700 text-white'
-                                : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                            }`}
-                          >
-                            ⚡ Email
-                          </button>
-                          <button
-                            onClick={() => handleCreateAndSendSMS(customer.id)}
-                            disabled={!customer.phone}
-                            title={!customer.phone ? 'No phone number' : 'Send atomic SMS'}
-                            className={`px-3 py-1 rounded text-xs font-medium ${
-                              customer.phone
-                                ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                                : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                            }`}
-                          >
-                            ⚡ SMS
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Deliveries List */}
-              {deliveries.length > 0 && (
-                <div>
-                  <h3 className="text-md font-medium text-white mb-3">Recent Deliveries</h3>
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {deliveries.slice(-5).reverse().map(delivery => {
-                      const customer = customerMap.get(delivery.customerId);
-                      return (
-                        <div key={delivery.id} className="flex items-center justify-between bg-gray-700 rounded p-3">
-                          <div className="flex-1">
-                            <div className="text-sm font-medium text-white">
-                              {customer?.name || 'Unknown'} (@{customer?.handle || 'unknown'})
-                            </div>
-                            <div className="text-xs text-gray-400">
-                              {new Date(delivery.createdAt).toLocaleString()}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className={`px-2 py-1 rounded text-xs ${
-                              delivery.method === 'email' ? 'bg-blue-600' : 'bg-purple-600'
-                            } text-white`}>
-                              {delivery.method}
-                            </span>
-                            <span className={`px-2 py-1 rounded text-xs ${
-                              delivery.status === 'sent' ? 'bg-green-600' : 'bg-yellow-600'
-                            } text-white`}>
-                              {delivery.status}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {customers.length === 0 && (
-                <div className="text-center py-4 text-gray-400">
-                  <div className="text-2xl mb-2">👥</div>
-                  <div className="text-sm">No customers found. Add customers first.</div>
-                </div>
-              )}
-            </div>
-
-            {/* Quick Links */}
-            <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
-              <h2 className="text-lg font-semibold text-white mb-4">
-                Quick Links
-              </h2>
-
-              <div className="space-y-2 text-sm">
-                <Link
-                  to="/gallery"
-                  className="block text-blue-400 hover:text-blue-300 transition-colors"
-                >
-                  → Back to Gallery
-                </Link>
-                <Link
-                  to="/upload"
-                  className="block text-blue-400 hover:text-blue-300 transition-colors"
-                >
-                  → Upload New Photo
-                </Link>
-                <Link
-                  to="/debug"
-                  className="block text-blue-400 hover:text-blue-300 transition-colors"
-                >
-                  → View Debug Console
-                </Link>
-              </div>
+            <div className="space-y-2 text-sm">
+              <Link
+                to="/gallery"
+                className="block text-blue-400 hover:text-blue-300 transition-colors"
+              >
+                → Back to Gallery
+              </Link>
+              <Link
+                to="/upload"
+                className="block text-blue-400 hover:text-blue-300 transition-colors"
+              >
+                → Upload New Photo
+              </Link>
+              <Link
+                to="/debug"
+                className="block text-blue-400 hover:text-blue-300 transition-colors"
+              >
+                → View Debug Console
+              </Link>
             </div>
           </div>
         </div>
