@@ -1,0 +1,9 @@
+# 🧠 GROK IMPLEMENTATION POLICY — PMC Revamp
+
+Grok's permissions in Cursor:
+- MAY create new folders or files inside /_grok_workspace/
+- MAY append or copy Claude-provided code into those files
+- MAY generate summary.md describing what was created
+- MAY NOT edit, overwrite, or delete existing project files
+- MAY NOT generate new logic or refactor code on its own
+- Must confirm every action with file path + status

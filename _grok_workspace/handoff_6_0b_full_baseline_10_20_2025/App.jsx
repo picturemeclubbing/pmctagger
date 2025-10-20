@@ -24,7 +24,6 @@ import SharePage from './pages/SharePage';
 import GalleryPage from './pages/GalleryPage';
 import SessionDetailPage from './pages/SessionDetailPage';
 import CustomerInfoPage from './pages/CustomerInfoPage';  // Phase 6.0a: NEW
-import DeliverySimplePage from './pages/DeliverySimplePage';  // Phase 6.1: NEW
 import DebugPage from './pages/DebugPage';
 
 // ============================================================================
@@ -48,7 +47,6 @@ function DebugAwareRoutes() {
       <Route path="/share/:sessionId" element={<Layout><SharePage /></Layout>} />
       <Route path="/gallery" element={<Layout><GalleryPage /></Layout>} />
       <Route path="/session/:sessionId" element={<Layout><SessionDetailPage /></Layout>} />
-      <Route path="/deliveries-simple" element={<Layout><DeliverySimplePage /></Layout>} />
       <Route path="/debug" element={<Layout><DebugPage debugContext={debugContext} /></Layout>} />
     </Routes>
   );

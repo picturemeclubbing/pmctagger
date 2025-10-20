@@ -1,0 +1,31 @@
+PMC REVAMP GROK SANDBOX FILE MANIFEST - VERSION 10
+==================================================
+
+Generated: 10/19/2025
+Handoff Version: STABLE V10 SANDBOX HANDOFF – 10/19/2025
+
+SANDBOX DIRECTORY FILES (/sandbox/):
+===========================================
+- database_delivery.js (Core database delivery service)
+- DeliveryItemSandbox.jsx (Sandbox delivery item component)
+- DeliveryQueueSandbox.js (Sandbox delivery queue implementation)
+- DeliveryQueueSandboxPage.jsx (Sandbox delivery queue page)
+- sandbox_readme.md (Sandbox documentation and guidelines)
+
+POLICY FILES:
+=============
+- .grok_policy.txt (Primary PMC Revamp Grok Policy document)
+
+ADDITIONAL HANDOFF FILES:
+=========================
+- summary.md (Sandbox creation and verification summary)
+- file_manifest.txt (This manifest file)
+- version_tag.txt (Version identification)
+
+COPIED FILES INCLUDED:
+======================
+- database_delivery.js (from /sandbox/)
+- .grok_policy.txt (from root/)
+- readme.txt (from /_grok_workspace/sandbox_test/)
+
+STATUS: ✅ All files verified and included in handoff package
