@@ -1,13 +1,7 @@
 /**
- * File: /src/services/database.js
- * Purpose: Dexie IndexedDB configuration with schema versioning
- * Connects To: All stores (SessionStore, CustomerStore), data models
- *
- * Version History:
- * - v1: Initial schema (photoSessions)
- * - v2: Added deliveryJobs, settings
- * - v3: Added customers table (Phase 5.2b)
- * - v4: Added deliveries table (Phase 6.0a)
+ * File: /src/utils/database.js
+ * Purpose: Complete Dexie IndexedDB configuration with full schema history + getDatabaseStats()
+ * Compatible With: Phase 6.1 DeliverySimple MVP and prior phases
  */
 
 import Dexie from 'dexie';
@@ -15,22 +9,22 @@ import Dexie from 'dexie';
 export const db = new Dexie('PMC_SocialTagger');
 
 // ============================================================================
-// SCHEMA VERSIONS
+// SCHEMA VERSION HISTORY
 // ============================================================================
 
-// Version 1: Initial schema
+// Version 1: Initial sessions table
 db.version(1).stores({
   photoSessions: '++id, sessionId, createdAt, hasTags, imageName'
 });
 
-// Version 2: Added delivery and settings
+// Version 2: Added deliveryJobs + settings
 db.version(2).stores({
   photoSessions: '++id, sessionId, createdAt, hasTags, imageName',
   deliveryJobs: '++id, jobId, sessionId, status, createdAt',
   settings: 'key'
 });
 
-// Version 3: Added customers (Phase 5.2b)
+// Version 3: Added customers table
 db.version(3).stores({
   photoSessions: '++id, sessionId, createdAt, hasTags, imageName',
   deliveryJobs: '++id, jobId, sessionId, status, createdAt',
@@ -38,7 +32,7 @@ db.version(3).stores({
   customers: '++id, handle, name, email, phone, createdAt'
 });
 
-// Version 4: Added deliveries table (Phase 6.0a)
+// Version 4: Added deliveries table
 db.version(4).stores({
   photoSessions: '++id, sessionId, createdAt, hasTags, imageName',
   deliveryJobs: '++id, jobId, sessionId, status, createdAt',
@@ -47,46 +41,38 @@ db.version(4).stores({
   deliveries: '++id, sessionId, customerId, status, consentAt, createdAt'
 });
 
+// Version 5: Added sentAt index for deliveries
+db.version(5).stores({
+  photoSessions: '++id, sessionId, createdAt, hasTags, imageName',
+  deliveryJobs: '++id, jobId, sessionId, status, createdAt',
+  settings: 'key',
+  customers: '++id, handle, name, email, phone, createdAt',
+  deliveries: '++id, sessionId, customerId, status, consentAt, sentAt, createdAt'
+});
+
+// Version 6: Added deliveries_simple table (Phase 6.1)
+db.version(6).stores({
+  photoSessions: '++id, sessionId, createdAt, hasTags, imageName',
+  deliveryJobs: '++id, jobId, sessionId, status, createdAt',
+  settings: 'key',
+  customers: '++id, handle, name, email, phone, createdAt',
+  deliveries: '++id, sessionId, customerId, status, consentAt, sentAt, createdAt',
+  deliveries_simple: '++id, status, sessionId, customerId, method, createdAt'
+});
+
 // ============================================================================
-// DATABASE INITIALIZATION
+// DATABASE UTILITIES
 // ============================================================================
 
 /**
  * Initialize database and verify schema
- * Ensures default settings row exists and seeds test customers
  */
 export async function initDatabase() {
   try {
     await db.open();
     console.log('[Database] Initialized successfully');
-    console.log('[Database] Schema version:', db.verno);
+    console.log('[Database] Version:', db.verno);
     console.log('[Database] Tables:', db.tables.map(t => t.name).join(', '));
-
-    // Ensure default settings row exists
-    const existing = await db.settings.get(1);
-    if (!existing) {
-      await db.settings.put({
-        id: 1,
-        brandName: 'Your Brand',
-        igHandle: '@yourhandle',
-        eventName: '',
-        watermarkStyle: {
-          enabled: true,
-          position: 'bottom',
-          padding: 24,
-          textSize: 28
-        },
-        deliveryProviders: {
-          email: { enabled: false },
-          sms: { enabled: false }
-        },
-        sizeLimits: { maxWidth: 1920, thumb: 300 },
-        createdAt: Date.now(),
-        updatedAt: Date.now()
-      });
-      console.log('[Database] Default settings initialized');
-    }
-
     return true;
   } catch (error) {
     console.error('[Database] Initialization failed:', error);
@@ -95,23 +81,14 @@ export async function initDatabase() {
 }
 
 /**
- * Check if database is ready
- */
-export async function isDatabaseReady() {
-  return db.isOpen();
-}
-
-/**
- * Clear all data (development/testing only)
+ * Clear all data (dev use only)
  */
 export async function clearAllData() {
-  if (process.env.NODE_ENV !== 'production') {
-    await db.photoSessions.clear();
-    await db.deliveryJobs.clear();
-    await db.settings.clear();
-    await db.customers.clear();
-    await db.deliveries.clear();
-    console.log('[Database] All data cleared');
+  try {
+    await Promise.all(db.tables.map(table => table.clear()));
+    console.log('[Database] All tables cleared (development only)');
+  } catch (error) {
+    console.error('[Database] Clear failed:', error);
   }
 }
 
@@ -119,16 +96,18 @@ export async function clearAllData() {
  * Get database statistics
  */
 export async function getDatabaseStats() {
-  return {
-    sessions: await db.photoSessions.count(),
-    deliveryJobs: await db.deliveryJobs.count(),
-    deliveries: await db.deliveries.count(),
-    customers: await db.customers.count(),
-    version: db.verno
-  };
+  try {
+    return {
+      sessions: await db.photoSessions.count(),
+      customers: await db.customers.count(),
+      deliveries: (await db.deliveries?.count()) || 0,
+      simpleDeliveries: (await db.deliveries_simple?.count()) || 0,
+      version: db.verno
+    };
+  } catch (error) {
+    console.error('[Database] Stats fetch failed:', error);
+    return { error: error.message };
+  }
 }
-
-// Auto-initialize on import
-initDatabase();
 
 export default db;
