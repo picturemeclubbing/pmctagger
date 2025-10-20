@@ -211,10 +211,46 @@ function HomePage() {
                     group
                   "
                 >
-                  {/* Thumbnail placeholder */}
-                  <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                    <span className="text-4xl">📷</span>
-                  </div>
+                  {/* Thumbnail with fallback hierarchy */}
+                  {(() => {
+                    // 1. thumbnailPath (preferred)
+                    if (session.thumbnailPath) {
+                      return (
+                        <img
+                          src={session.thumbnailPath}
+                          alt={session.imageName || 'Session Preview'}
+                          className="object-cover w-full h-full rounded-lg"
+                        />
+                      );
+                    }
+                    // 2. imageUrl (legacy)
+                    if (session.imageUrl) {
+                      return (
+                        <img
+                          src={session.imageUrl}
+                          alt={session.imageName || 'Session Preview'}
+                          className="object-cover w-full h-full rounded-lg"
+                        />
+                      );
+                    }
+                    // 3. Create URL from fileBlob
+                    if (session.fileBlob) {
+                      const blobUrl = URL.createObjectURL(session.fileBlob);
+                      return (
+                        <img
+                          src={blobUrl}
+                          alt={session.imageName || 'Session Preview'}
+                          className="object-cover w-full h-full rounded-lg"
+                        />
+                      );
+                    }
+                    // 4. Placeholder (no image available)
+                    return (
+                      <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                        <span className="text-4xl">📷</span>
+                      </div>
+                    );
+                  })()}
 
                   {/* Status Badge */}
                   {session.hasTags && (

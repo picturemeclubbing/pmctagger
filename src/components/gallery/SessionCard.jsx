@@ -21,16 +21,36 @@ export default function SessionCard({ session, onOpen, onDelete }) {
   const [thumbnailUrl, setThumbnailUrl] = useState(null);
   const [isHovered, setIsHovered] = useState(false);
 
-  // Generate thumbnail URL from blob
+  // Generate thumbnail URL with fallback hierarchy
   useEffect(() => {
-    if (session.rawThumbBlob) {
-      const url = URL.createObjectURL(session.rawThumbBlob);
-      setThumbnailUrl(url);
+    let url = null;
 
-      // Cleanup
-      return () => URL.revokeObjectURL(url);
+    // 1. thumbnailPath (preferred)
+    if (session.thumbnailPath) {
+      url = session.thumbnailPath;
     }
-  }, [session.rawThumbBlob]);
+    // 2. imageUrl (legacy)
+    else if (session.imageUrl) {
+      url = session.imageUrl;
+    }
+    // 3. Create URL from fileBlob
+    else if (session.fileBlob) {
+      url = URL.createObjectURL(session.fileBlob);
+    }
+    // 4. fallback to rawThumbBlob (old format)
+    else if (session.rawThumbBlob) {
+      url = URL.createObjectURL(session.rawThumbBlob);
+    }
+
+    setThumbnailUrl(url);
+
+    // Cleanup if we created a blob URL
+    return () => {
+      if ((session.rawThumbBlob || session.fileBlob) && url) {
+        URL.revokeObjectURL(url);
+      }
+    };
+  }, [session]);
 
   // Get first linked customer name if available
   const linkedCustomerName = session.tagsMeta
