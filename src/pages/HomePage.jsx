@@ -9,6 +9,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import useDebug from '../debug/useDebug';
 import { listSessions } from '../services/SessionStore';
 import { getDatabaseStats } from '../services/database';
+import { resolvePreview } from '../utils/resolvePreview';
 import AppVersion from '../components/AppVersion';
 
 function HomePage() {
@@ -200,57 +201,32 @@ function HomePage() {
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              {recentSessions.map(session => (
-                <button
-                  key={session.sessionId}
-                  onClick={() => handleOpenSession(session.sessionId)}
-                  className="
-                    relative aspect-square bg-white rounded-lg
-                    border border-gray-200 shadow-sm
-                    hover:shadow-md transition-all overflow-hidden
-                    group
-                  "
-                >
-                  {/* Thumbnail with fallback hierarchy */}
-                  {(() => {
-                    // 1. thumbnailPath (preferred)
-                    if (session.thumbnailPath) {
-                      return (
-                        <img
-                          src={session.thumbnailPath}
-                          alt={session.imageName || 'Session Preview'}
-                          className="object-cover w-full h-full rounded-lg"
-                        />
-                      );
-                    }
-                    // 2. imageUrl (legacy)
-                    if (session.imageUrl) {
-                      return (
-                        <img
-                          src={session.imageUrl}
-                          alt={session.imageName || 'Session Preview'}
-                          className="object-cover w-full h-full rounded-lg"
-                        />
-                      );
-                    }
-                    // 3. Create URL from fileBlob
-                    if (session.fileBlob) {
-                      const blobUrl = URL.createObjectURL(session.fileBlob);
-                      return (
-                        <img
-                          src={blobUrl}
-                          alt={session.imageName || 'Session Preview'}
-                          className="object-cover w-full h-full rounded-lg"
-                        />
-                      );
-                    }
-                    // 4. Placeholder (no image available)
-                    return (
-                      <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                        <span className="text-4xl">📷</span>
-                      </div>
-                    );
-                  })()}
+              {recentSessions.map(session => {
+                console.info('[HOMEPAGE] preview_source', {
+                  sessionId: session.sessionId,
+                  hasThumbDataUrl: !!session.thumbDataUrl,
+                  hasThumbnailPath: !!session.thumbnailPath,
+                  hasImageUrl: !!session.imageUrl,
+                  hasFileBlob: !!session.fileBlob,
+                });
+
+                return (
+                  <button
+                    key={session.sessionId}
+                    onClick={() => handleOpenSession(session.sessionId)}
+                    className="
+                      relative aspect-square bg-white rounded-lg
+                      border border-gray-200 shadow-sm
+                      hover:shadow-md transition-all overflow-hidden
+                      group
+                    "
+                  >
+                    <img
+                      src={resolvePreview(session)}
+                      alt={session.imageName || 'Session Preview'}
+                      className="object-cover w-full h-full rounded-lg"
+                      loading="lazy"
+                    />
 
                   {/* Status Badge */}
                   {session.hasTags && (
@@ -270,8 +246,9 @@ function HomePage() {
                       View Session
                     </span>
                   </div>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           )}
         </section>

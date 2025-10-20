@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useDebug from '../debug/useDebug';
 import { compressImage, makeThumbnail } from '../services/ImageService';
-import { saveRawVersion } from '../services/SessionStore';
-import { generateSessionId, validateFile } from '../utils/helpers';
+import { saveRawVersion, updateSession } from '../services/SessionStore';
+import { generateSessionId, validateFile, blobToDataURL } from '../utils/helpers';
 import DropzoneArea from '../components/upload/DropzoneArea';
 import PreviewCard from '../components/upload/PreviewCard';
 
@@ -53,10 +53,21 @@ function UploadPage() {
         debug.log('Creating thumbnail...');
         const thumbBlob = await makeThumbnail(file, 300);
 
+        setProgress(65);
+        setProgressText('Converting thumbnail...');
+        debug.log('Converting thumbnail to DataURL...');
+        const thumbDataUrl = await blobToDataURL(thumbBlob);
+        console.info('[UPLOAD] thumbDataUrl_saved', { sessionId, len: thumbDataUrl?.length });
+
         setProgress(80);
         setProgressText('Saving to session...');
         debug.log('Saving to session...');
-        await saveRawVersion(sessionId, compressedBlob, thumbBlob, file.name);
+        const session = await saveRawVersion(sessionId, compressedBlob, thumbBlob, file.name);
+
+        // Persist the thumbDataUrl for homepage display
+        if (thumbDataUrl) {
+          await updateSession(sessionId, { thumbDataUrl });
+        }
 
         setProgress(100);
         setProgressText('Upload complete!');

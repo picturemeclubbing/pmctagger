@@ -50,9 +50,9 @@ db.version(5).stores({
   deliveries: '++id, sessionId, customerId, status, consentAt, sentAt, createdAt'
 });
 
-// Version 6: Added deliveries_simple table (Phase 6.1)
+// Version 6: Added deliveries_simple table (Phase 6.1) + thumbDataUrl for homepage thumbnails (Phase 6.3b)
 db.version(6).stores({
-  photoSessions: '++id, sessionId, createdAt, hasTags, imageName',
+  photoSessions: '++id, sessionId, createdAt, hasTags, imageName, thumbDataUrl',
   deliveryJobs: '++id, jobId, sessionId, status, createdAt',
   settings: 'key',
   customers: '++id, handle, name, email, phone, createdAt',
