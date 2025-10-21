@@ -13,7 +13,8 @@ export default function Navigation() {
   const navItems = [
     { path: '/gallery', label: 'Gallery', icon: '🖼️', color: 'green' },
     { path: '/upload', label: 'Upload', icon: '📤', color: 'blue' },
-    { path: '/crm', label: 'CRM', icon: '👥', color: 'blue' },
+    { path: '/deliveries-auto', label: 'Deliveries', icon: '🚀', color: 'blue' }, // Phase 7.0 - NEW
+    { path: '/crm', label: 'CRM', icon: '👥', color: 'purple' },
     { path: '/settings', label: 'Settings', icon: '⚙️', color: 'gray' },
     { path: '/debug', label: 'Debug', icon: '🐛', color: 'gray' }
   ];
