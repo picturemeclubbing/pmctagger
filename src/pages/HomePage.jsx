@@ -53,7 +53,7 @@ function HomePage() {
 
   const handleOpenSession = (sessionId) => {
     debug.log('open_session', { sessionId });
-    navigate(`/tag/${sessionId}`);
+    navigate(`/session/${sessionId}`);
   };
 
   return (
