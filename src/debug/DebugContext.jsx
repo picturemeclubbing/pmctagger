@@ -5,6 +5,7 @@
  */
 
 import React, { createContext, useContext, useState, useRef } from 'react';
+import { resetCRMDatabase } from './validateDatabase';
 
 const DebugContext = createContext(null);
 
@@ -66,4 +67,24 @@ export function useDebugContext() {
   const ctx = useContext(DebugContext);
   if (!ctx) throw new Error('useDebugContext must be used within <DebugProvider/>');
   return ctx;
+}
+
+/**
+ * Phase 8.2: Debug actions hook for control panel
+ */
+export function useDebugActions() {
+  const actions = [
+    {
+      label: 'Reset CRM Database Schema',
+      description: 'Deletes and rebuilds Dexie database under v9 schema (Phase 8.2).',
+      action: async () => {
+        if (confirm('⚠️ This will wipe all local CRM data and rebuild the schema. Continue?')) {
+          await resetCRMDatabase();
+          alert('✅ CRM Database Schema has been reset to Dexie v9.');
+          window.location.reload();
+        }
+      },
+    },
+  ];
+  return actions;
 }

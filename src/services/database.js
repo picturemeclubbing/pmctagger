@@ -84,17 +84,19 @@ db.version(8).stores({
   customer_images: '++id, customerId, url, filename, thumbnailUrl, createdAt, updatedAt'
 });
 
-// Version 9: Phase 8.1 - CRM Visual & Profile Enhancements (profile images)
+// Version 9: Phase 8.2 - CRM Database Fix (Numeric Keys + Profile Schema)
 db.version(9).stores({
   photoSessions: '++id, sessionId, createdAt, hasTags, imageName, thumbDataUrl',
   deliveryJobs: '++id, jobId, sessionId, status, createdAt',
   settings: 'key',
-  customers: 'customerId, handle, name, email, phone, createdAt, lastDeliveryAt, tagCount, imagesCount, profileImageUrl, profileImageUpdatedAt',
+  // Phase 8.2: Numeric customer IDs only - profiles integrated
+  customers: '++id, name, handle, email, phone, profileImageId, profileImageSource, createdAt, updatedAt',
   deliveries: '++id, sessionId, customerId, status, consentAt, sentAt, createdAt',
   deliveries_simple: '++id, status, sessionId, customerId, method, createdAt, attempt, nextRetryAt, sentAt',
   delivery_logs: '++id, deliveryId, sessionId, customerId, method, status, attempt, createdAt, provider, responseCode, responseData, processingTime',
   customer_notes: '++id, customerId, createdAt, author, content',
-  customer_images: '++id, customerId, url, filename, thumbnailUrl, createdAt, updatedAt'
+  // Phase 8.2: Enhanced image metadata
+  customer_images: '++id, customerId, sessionId, sourceType, uploadedBy, createdAt, isProfileImage'
 });
 
 // ============================================================================
