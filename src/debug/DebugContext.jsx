@@ -124,8 +124,8 @@ export function useDebugActions() {
           });
 
           console.log('✅ Dummy CRM data created:', { customerId, imageId });
-          alert('✅ Dummy CRM record created successfully.');
-          window.location.reload();
+          alert('✅ Dummy CRM record created successfully. Redirecting...');
+          window.location.href = `/crm/${customerId}`;
         } catch (err) {
           console.error('❌ Dummy data generation failed:', err);
           alert('❌ Failed to create dummy data. Check console for details.');
