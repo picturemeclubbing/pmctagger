@@ -6,6 +6,7 @@
 
 import React, { createContext, useContext, useState, useRef } from 'react';
 import { resetCRMDatabase } from './validateDatabase';
+import db from '../services/database';
 
 const DebugContext = createContext(null);
 
@@ -75,13 +76,59 @@ export function useDebugContext() {
 export function useDebugActions() {
   const actions = [
     {
-      label: 'Reset CRM Database Schema',
-      description: 'Deletes and rebuilds Dexie database under v9 schema (Phase 8.2).',
+      label: '🧹 Reset CRM Database Schema',
+      description: 'Deletes and rebuilds Dexie v9 database schema.',
       action: async () => {
-        if (confirm('⚠️ This will wipe all local CRM data and rebuild the schema. Continue?')) {
+        if (confirm('⚠️ This will wipe all local CRM data. Continue?')) {
           await resetCRMDatabase();
-          alert('✅ CRM Database Schema has been reset to Dexie v9.');
+          alert('✅ CRM Database Schema reset complete.');
           window.location.reload();
+        }
+      },
+    },
+    {
+      label: '💾 Generate Dummy CRM Data',
+      description: 'Creates sample customer and profile image for Phase 8.2 testing.',
+      action: async () => {
+        try {
+          console.log('[Debug] Creating dummy CRM data...');
+
+          const customerId = await db.customers.add({
+            name: 'Arthur King',
+            handle: '@arthurking',
+            email: 'picturemeclubbing@gmail.com',
+            phone: '3137031555',
+            profileImageId: null,
+            profileImageSource: null,
+            profileImageUrl: null,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          });
+
+          const imageId = await db.customer_images.add({
+            customerId,
+            sessionId: 'session_test_1',
+            url: 'https://picsum.photos/800',
+            thumbnailUrl: 'https://picsum.photos/200',
+            sourceType: 'manual',
+            uploadedBy: 'system',
+            createdAt: Date.now(),
+            isProfileImage: true,
+          });
+
+          await db.customers.update(customerId, {
+            profileImageId: imageId,
+            profileImageSource: 'manual',
+            profileImageUrl: 'https://picsum.photos/800',
+            profileImageUpdatedAt: Date.now(),
+          });
+
+          console.log('✅ Dummy CRM data created:', { customerId, imageId });
+          alert('✅ Dummy CRM record created successfully.');
+          window.location.reload();
+        } catch (err) {
+          console.error('❌ Dummy data generation failed:', err);
+          alert('❌ Failed to create dummy data. Check console for details.');
         }
       },
     },
