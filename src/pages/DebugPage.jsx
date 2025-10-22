@@ -3,6 +3,7 @@
 // Connects To: DebugContext.jsx, useDebug.js, App.jsx (route registration)
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import DebugPanel from '../components/DebugPanel';
 
 // ============================================================================
 // CONSTANTS & CONFIGURATION
@@ -286,6 +287,11 @@ export default function DebugPage({ debugContext }) {
           ))}
         </div>
       </div>
+
+      {/* ===== PHASE 8.2: DEBUG TOOLS PANEL ===== */}
+      <section className="flex-shrink-0 px-3 py-4 bg-gray-800/30 border-b border-gray-700">
+        <DebugPanel />
+      </section>
 
       {/* ===== LOG STREAM ===== */}
       <main

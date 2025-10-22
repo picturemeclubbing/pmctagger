@@ -10,6 +10,8 @@ import { useDebugActions } from '../debug/DebugContext';
 function DebugPanel() {
   const actions = useDebugActions();
 
+  console.log('[DebugPanel] Actions initialized:', actions.length);
+
   return (
     <div className="bg-gray-50 border-t border-gray-200 p-6 rounded-lg shadow-inner">
       <h2 className="text-lg font-semibold mb-4 text-gray-800">🧩 Developer Debug Tools</h2>
