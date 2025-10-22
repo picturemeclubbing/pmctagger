@@ -28,6 +28,8 @@ import CustomerInfoPage from './pages/CustomerInfoPage';  // Phase 6.0a: NEW
 import DeliverySimplePage from './pages/DeliverySimplePage';  // Phase 6.1: NEW
 import DeliveryMonitorPage from './pages/DeliveryMonitorPage';  // Phase 7.0: NEW
 import SettingsPage from './pages/SettingsPage';  // Phase 7.0: NEW
+import CRMHomePage from './pages/CRMHomePage';  // Phase 8.0: NEW
+import CustomerProfilePage from './pages/CustomerProfilePage';  // Phase 8.0: NEW
 import DebugPage from './pages/DebugPage';
 
 // Services
@@ -59,6 +61,8 @@ function DebugAwareRoutes() {
       <Route path="/deliveries-simple" element={<Layout><DeliverySimplePage /></Layout>} />
       <Route path="/deliveries-auto" element={<Layout><DeliveryMonitorPage /></Layout>} />  {/* Phase 7.0: NEW */}
       <Route path="/settings" element={<Layout><SettingsPage /></Layout>} />  {/* Phase 7.0: NEW */}
+      <Route path="/crm" element={<Layout><CRMHomePage /></Layout>} />  {/* Phase 8.0: NEW */}
+      <Route path="/crm/:customerId" element={<Layout><CustomerProfilePage /></Layout>} />  {/* Phase 8.0: NEW */}
       <Route path="/debug" element={<Layout><DebugPage debugContext={debugContext} /></Layout>} />
     </Routes>
   );

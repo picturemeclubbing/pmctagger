@@ -1,6 +1,7 @@
 /**
  * File: /src/services/CustomerStore.js
  * Purpose: Core customer CRUD operations and search service (Phase 8.0)
+ * REMEDIATION: Fixed getCustomerStats() to use indexed .count() queries
  * Connects To: database.js, DeliveryAutomation.js, useCustomerData.js
  */
 
@@ -166,7 +167,8 @@ export async function attachDeliveryEvent(customerId, deliveryAt, tagCount = 0) 
         phone: '',
         createdAt: deliveryAt,
         lastDeliveryAt: deliveryAt,
-        tagCount: tagCount
+        tagCount: tagCount,
+        imagesCount: 0
       });
     } else {
       // Update existing customer
@@ -187,27 +189,35 @@ export async function attachDeliveryEvent(customerId, deliveryAt, tagCount = 0) 
 }
 
 /**
- * Get customer statistics
- * @returns {Promise<Object>}
+ * REMEDIATION: Get customer statistics using indexed .count() queries (no N+1)
+ * @returns {Promise<Object>} { total, active30d, tagged, withImages }
  */
 export async function getCustomerStats() {
   try {
-    const customers = await db.customers.toArray();
     const now = new Date();
-    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-    const stats = {
-      total: customers.length,
-      active: customers.filter(c => c.lastDeliveryAt && new Date(c.lastDeliveryAt) > thirtyDaysAgo).length,
-      tagged: customers.filter(c => (c.tagCount || 0) > 0).length,
-      withImages: 0 // Will be calculated by useCustomerData hook
-    };
+    // Use Promise.all for parallel indexed queries
+    const [total, active30d, tagged, withImages] = await Promise.all([
+      // Total customers count
+      db.customers.count(),
 
-    return stats;
+      // Active customers (lastDeliveryAt within 30 days)
+      db.customers.where('lastDeliveryAt')
+        .above(new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString())
+        .count(),
+
+      // Tagged customers (tagCount > 0)
+      db.customers.where('tagCount').above(0).count(),
+
+      // Customers with images (imagesCount > 0)
+      db.customers.where('imagesCount').above(0).count()
+    ]);
+
+    return { total, active30d, tagged, withImages };
 
   } catch (error) {
     console.error('[CustomerStore] Get customer stats failed:', error);
-    return { total: 0, active: 0, tagged: 0, withImages: 0 };
+    return { total: 0, active30d: 0, tagged: 0, withImages: 0 };
   }
 }
 
