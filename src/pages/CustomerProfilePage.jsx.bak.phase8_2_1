@@ -22,27 +22,9 @@ import {
 } from '../services/CustomerNoteStore.js';
 import CustomerImageGallery from '../components/CustomerImageGallery.jsx';
 
-/**
- * PHASE 8.2.1: Normalize customer URL param from string to number for Dexie v9
- * @param {*} param - URL parameter (string or number)
- * @returns {number|undefined} Valid numeric ID or undefined if invalid
- */
-const normalizeUrlParam = (param) => {
-  const numericId = Number(param);
-  if (isNaN(numericId) || numericId <= 0) {
-    console.warn('[CustomerProfilePage] Invalid URL parameter customerId:', param, typeof param);
-    return undefined;
-  }
-  console.debug('[CustomerProfilePage] Normalized URL customerId:', param, '→', numericId);
-  return numericId;
-};
-
 const CustomerProfilePage = () => {
-  const { customerId: paramId } = useParams();
+  const { customerId } = useParams();
   const navigate = useNavigate();
-
-  // PHASE 8.2.1: Convert URL param to number for consistent Dexie v9 keys
-  const customerId = normalizeUrlParam(paramId);
 
   // State
   const [customer, setCustomer] = useState(null);

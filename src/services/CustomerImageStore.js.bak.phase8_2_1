@@ -7,21 +7,6 @@
 import { db, setProfileImage } from './database.js';
 
 /**
- * PHASE 8.2.1: Normalize customer ID from string to number for Dexie v9
- * @param {*} customerId - Customer ID (string or number)
- * @returns {number|undefined} Normalized numeric ID or undefined if invalid
- */
-function normalizeId(customerId) {
-  const numericId = Number(customerId);
-  if (isNaN(numericId) || numericId <= 0) {
-    console.warn('[CustomerImageStore] Invalid customer ID format:', customerId, typeof customerId);
-    return undefined;
-  }
-  console.debug('[CustomerImageStore] Normalized customer ID:', customerId, '→', numericId);
-  return numericId;
-}
-
-/**
  * Add image to customer
  * @param {string} customerId
  * @param {Object} imageData - { url, filename, thumbnailUrl }
@@ -51,15 +36,12 @@ export async function addCustomerImage(customerId, imageData) {
 
 /**
  * Get all images for a customer
- * @param {string|number} customerId
+ * @param {string} customerId
  * @returns {Promise<Array>}
  */
 export async function getCustomerImages(customerId) {
   try {
-    const numericId = normalizeId(customerId);
-    if (!numericId) return [];
-
-    return await db.customer_images.where('customerId').equals(numericId).toArray();
+    return await db.customer_images.where('customerId').equals(customerId).toArray();
   } catch (error) {
     console.error('[CustomerImageStore] Get customer images failed:', error);
     return [];
@@ -68,17 +50,14 @@ export async function getCustomerImages(customerId) {
 
 /**
  * Get customer images ordered by creation date (newest first)
- * @param {string|number} customerId
+ * @param {string} customerId
  * @returns {Promise<Array>}
  */
 export async function listCustomerImages(customerId) {
   try {
-    const numericId = normalizeId(customerId);
-    if (!numericId) return [];
-
     return await db.customer_images
       .where('customerId')
-      .equals(numericId)
+      .equals(customerId)
       .reverse()
       .sortBy('createdAt');
   } catch (error) {

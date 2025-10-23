@@ -7,21 +7,6 @@
 import { db, getSetting } from './database.js';
 
 /**
- * PHASE 8.2.1: Normalize customer ID from string to number for Dexie v9
- * @param {*} customerId - Customer ID (string or number)
- * @returns {number|undefined} Normalized numeric ID or undefined if invalid
- */
-function normalizeCustomerId(customerId) {
-  const numericId = Number(customerId);
-  if (isNaN(numericId) || numericId <= 0) {
-    console.warn('[CustomerStore] Invalid customer ID format:', customerId, typeof customerId);
-    return undefined;
-  }
-  console.debug('[CustomerStore] Normalized customer ID:', customerId, '→', numericId);
-  return numericId;
-}
-
-/**
  * Create or update a customer record
  * @param {Object} customerData - Customer information
  * @returns {Promise<Object>} Created/updated customer
@@ -82,15 +67,12 @@ export async function getCustomerByHandle(handle) {
 
 /**
  * Get customer by ID
- * @param {string|number} customerId
+ * @param {string} customerId
  * @returns {Promise<Object|null>}
  */
 export async function getCustomerById(customerId) {
   try {
-    const numericId = normalizeCustomerId(customerId);
-    if (!numericId) return null;
-
-    return await db.customers.get(numericId);
+    return await db.customers.get(customerId);
   } catch (error) {
     console.error('[CustomerStore] Get customer failed:', error);
     return null;
@@ -272,24 +254,21 @@ export async function getAllCustomers(options = {}) {
 
 /**
  * Delete customer and all associated data
- * @param {string|number} customerId
+ * @param {string} customerId
  * @returns {Promise<boolean>}
  */
 export async function deleteCustomer(customerId) {
   try {
-    const numericId = normalizeCustomerId(customerId);
-    if (!numericId) return false;
-
     // Delete customer and associated data in transaction
     await Promise.all([
-      db.customers.delete(numericId),
+      db.customers.delete(customerId),
       // Clean up related data (will be handled by cascade in React components)
-      db.customer_notes.where('customerId').equals(numericId).delete(),
-      db.customer_images.where('customerId').equals(numericId).delete(),
+      db.customer_notes.where('customerId').equals(customerId).delete(),
+      db.customer_images.where('customerId').equals(customerId).delete(),
       // Update delivery references (customerId becomes null or inactive)
     ]);
 
-    console.log(`[CustomerStore] Deleted customer: ${customerId} (${numericId})`);
+    console.log(`[CustomerStore] Deleted customer: ${customerId}`);
     return true;
 
   } catch (error) {
@@ -341,18 +320,15 @@ export async function attachDeliveryEvent(customerId, deliveryAt, tagCount = 0) 
 
 /**
  * PHASE 8.1: Get customer tags/deliveries for profile display
- * @param {string|number} customerId
+ * @param {string} customerId
  * @returns {Promise<Array>} Array of deliveries/tags for this customer
  */
 export async function getCustomerTags(customerId) {
   try {
-    const numericId = normalizeCustomerId(customerId);
-    if (!numericId) return [];
-
     // Query deliveries_simple for customer's deliveries (which represent tags)
     const deliveries = await db.deliveries_simple
       .where('customerId')
-      .equals(numericId)
+      .equals(customerId)
       .sortBy('createdAt');
 
     return deliveries;
